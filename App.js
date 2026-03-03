@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet, Text, View } from 'react-native';
-import { Button } from 'react-native-web';
+import { Button, FlatList } from 'react-native-web';
 
 export default function App() {
   const Stack = createNativeStackNavigator()
@@ -23,23 +23,27 @@ export default function App() {
 }
 
 const ListPage = ({navigation, route}) => {
-
-  function handleButton(){
-      navigation.navigate('DetailPage')
+  const myList = [{key:1, name:"Anna"}, {key:2, name:"Bob"} ]
+  function handleButton(item){
+      navigation.navigate('DetailPage', {message:item})
   }
 
   return (
     <View>
       <Text>Hej</Text>
-      <Button title='DetailPage' onPress={handleButton}></Button>
+      <FlatList
+      data={myList}
+      renderItem={(note) => <Button title={note.item.name} onPress={()=>handleButton(note.item)}/>}
+      />
     </View>
   )
 }
 
 const DetailPage = ({navigation, route}) => {
+  const message = route.params?.message
   return (
     <View>
-      <Text>Detaljer...</Text>
+      <Text>Detaljer...{message.name}</Text>
     </View>
   )
 }
