@@ -1,11 +1,13 @@
-import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StyleSheet, Text, View } from 'react-native';
-import { Button, FlatList } from 'react-native-web';
+import { StyleSheet, Text, View, TextInput, Button, FlatList  } from 'react-native';
+import { useState} from 'react';
+
+
 
 export default function App() {
   const Stack = createNativeStackNavigator()
+  const [notes, setNotes] = useState([])
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName='ListPage'>
@@ -23,7 +25,7 @@ export default function App() {
 }
 
 const ListPage = ({navigation, route}) => {
-  const myList = [{key:1, name:"Anna"}, {key:2, name:"Bob"} ]
+  const myList = [{key:1, name:"Note 1"}, {key:2, name:"Note 2"} ]
   function handleButton(item){
       navigation.navigate('DetailPage', {message:item})
   }
@@ -40,10 +42,20 @@ const ListPage = ({navigation, route}) => {
 }
 
 const DetailPage = ({navigation, route}) => {
+  const [text, setText] = useState('')
   const message = route.params?.message
+  
+  function handleButton(){
+    //alert("Task saved " + text)
+    setNotes(
+      [...notes, {key:notes.length, name:text}]
+    )
+  }
   return (
     <View>
-      <Text>Detaljer...{message.name}</Text>
+      <Text>{message.name}</Text>
+      <TextInput onChangeText={(txt) => setText(txt)}/>
+      <Button title='Save Note' onPress={handleButton}></Button>
     </View>
   )
 }
