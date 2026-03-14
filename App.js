@@ -7,7 +7,7 @@ import { useState} from 'react';
 
 export default function App() {
   const Stack = createNativeStackNavigator()
-  const [notes, setNotes] = useState([])
+  
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName='ListPage'>
@@ -25,36 +25,64 @@ export default function App() {
 }
 
 const ListPage = ({navigation, route}) => {
-  const myList = [{key:1, name:"Note 1"}, {key:2, name:"Note 2"} ]
+  const [myList, setMyList] = useState([ 
+    {key:1, name:"Note 1"}, 
+    {key:2, name:"Note 2"} 
+  ]);
+
   function handleButton(item){
-      navigation.navigate('DetailPage', {message:item})
+    navigation.navigate('DetailPage', {message:item})
   }
 
+  function addNewNote() {
+    navigation.navigate('DetailPage');
+  }
+
+  if (route.params?.newNote) {
+    const noteExists = myList.some(note => note.key === route.params.newNote.key);
+
+    if (!noteExists) {
+      setMyList([...myList, route.params.newNote]);
+    }
+  }
+
+  //Add Note button currently doesnt do anything.
   return (
     <View>
       <Text>Hej</Text>
+
+      <Button title="Add Note" onPress={addNewNote} />
+      
       <FlatList
-      data={myList}
-      renderItem={(note) => <Button title={note.item.name} onPress={()=>handleButton(note.item)}/>}
+        data={myList}
+        renderItem={({ item }) => (
+          <Button title={item.name} onPress={() => handleButton(item)} />
+        )}
       />
     </View>
-  )
-}
+  );
+};
 
-const DetailPage = ({navigation, route}) => {
+const DetailPage = ({ navigation, route }) => {
   const [text, setText] = useState('')
-  const message = route.params?.message
+  const message = route.params?.message;
   
   function handleButton(){
-    //alert("Task saved " + text)
-    setNotes(
-      [...notes, {key:notes.length, name:text}]
-    )
+    const newNote = {
+      key: Date.now().toString(),
+      name: text
+    };
+
+    navigation.navigate('ListPage', {newNote: newNote });
   }
+
   return (
     <View>
-      <Text>{message.name}</Text>
-      <TextInput onChangeText={(txt) => setText(txt)}/>
+      <Text>{message ? message.name: 'New Note'}</Text>
+      <TextInput 
+        value={text}
+        onChangeText={(txt) => setText(txt)}
+      />
       <Button title='Save Note' onPress={handleButton}></Button>
     </View>
   )
