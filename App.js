@@ -4,95 +4,133 @@ import { StyleSheet, Text, View, TextInput, Button, FlatList  } from 'react-nati
 import { useState} from 'react';
 
 
+const Stack = createNativeStackNavigator()
 
 export default function App() {
-  const Stack = createNativeStackNavigator()
-  
+  const [tasks, setTasks] = useState([
+    { key: '1', name: 'Task 1', details: 'Details for task 1' },
+    { key: '2', name: 'Task 2', details: 'Details for task 2' }
+  ]);
+
+  function addTask(taskName) {
+    if (!taskName.trim()) return;
+
+    const newTask = {
+      key: Date.now().toString(),
+      name: taskName,
+      details: ''
+    };
+
+    setTasks([...tasks, newTask]);
+  }
+
+  function updateTaskDetails(taskKey, newDetails) {
+    const updatedTasks = tasks.map((task) =>  
+      task.key === taskKey ? {...task, details: newDetails} : task
+  );
+
+  setTasks(updatedTasks);
+}
+
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName='ListPage'>
-        <Stack.Screen
-        name='ListPage'
-        component={ListPage}
-        />
-        <Stack.Screen
-        name='DetailPage'
-        component={DetailPage}
-        />
+        <Stack.Screen name='ListPage'>
+          {(props) => (
+            <ListPage
+              {...props}
+              tasks={tasks}
+              addTask={addTask}
+            />
+          )}
+        </Stack.Screen>
+        
+        <Stack.Screen name='DetailPage'>
+          {(props) => (
+              <DetailPage
+                {...props}
+                tasks={tasks}
+                updateTaskDetails={updateTaskDetails}
+              />
+            )}
+        </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
 
-const ListPage = ({navigation, route}) => {
-  const [myList, setMyList] = useState([ 
-    {key:1, name:"Note 1"}, 
-    {key:2, name:"Note 2"} 
-  ]);
+const ListPage = ({ navigation, tasks, addTask }) => {
+  const [text, setText] = useState('');
 
-  function handleButton(item){
-    navigation.navigate('DetailPage', {message:item})
+  function handleTaskPress(item){
+    navigation.navigate('DetailPage', { taskKey: item.key });
   }
 
-  function addNewNote() {
-    navigation.navigate('DetailPage');
+  function handleAddTask() {
+    addTask(text);
+    setText('');
   }
 
-  if (route.params?.newNote) {
-    const noteExists = myList.some(note => note.key === route.params.newNote.key);
-
-    if (!noteExists) {
-      setMyList([...myList, route.params.newNote]);
-    }
-  }
-
-  //Add Note button currently doesnt do anything.
   return (
-    <View>
-      <Text>Hej</Text>
+    <View style={styles.container}>
+      <Text>Tasks</Text>
 
-      <Button title="Add Note" onPress={addNewNote} />
-      
+      <TextInput
+        placeholder="Write new task"
+        value={text}
+        onChangeText={(txt) => setText(txt)}
+      />
+
+      <Button title="Add task" onPress={handleAddTask} />
+
       <FlatList
-        data={myList}
-        renderItem={({ item }) => (
-          <Button title={item.name} onPress={() => handleButton(item)} />
-        )}
+        data={tasks}
+        renderItem={({ item }) => 
+          <View>
+            <Button title={item.name} onPress={() => handleTaskPress(item)} />
+          </View>
+        }
       />
     </View>
   );
 };
 
-const DetailPage = ({ navigation, route }) => {
-  const [text, setText] = useState('')
-  const message = route.params?.message;
+const DetailPage = ({ route, tasks, updateTaskDetails }) => {
+  const taskKey = route.params?.taskKey;
+  const task = tasks.find((t) => t.key === taskKey);
   
-  function handleButton(){
-    const newNote = {
-      key: Date.now().toString(),
-      name: text
-    };
-
-    navigation.navigate('ListPage', {newNote: newNote });
+  if(!task) {
+    return (
+      <View style={styles.container}>
+        <Text>Task not found</Text>
+      </View>
+    );
   }
 
   return (
-    <View>
-      <Text>{message ? message.name: 'New Note'}</Text>
-      <TextInput 
-        value={text}
-        onChangeText={(txt) => setText(txt)}
+    <View style={styles.container}>
+      <Text>{task.name}</Text>
+      
+      <Text>Task details:</Text>
+
+      <TextInput
+        placeholder="Write details here"
+        value={task.details}
+        onChangeText={(txt) => updateTaskDetails(task.key, txt)}
+        multiline={true}
       />
-      <Button title='Save Note' onPress={handleButton}></Button>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 20,
   },
+  title: {
+    fontSize: 24,
+    marginBottom: 15,
+  }
 })
