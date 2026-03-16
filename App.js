@@ -73,9 +73,10 @@ const ListPage = ({ navigation, tasks, addTask }) => {
 
   return (
     <View style={styles.container}>
-      <Text>Tasks</Text>
+      <Text style={styles.title}>Tasks</Text>
 
       <TextInput
+        style={styles.input}
         placeholder="Write new task"
         value={text}
         onChangeText={(txt) => setText(txt)}
@@ -86,7 +87,7 @@ const ListPage = ({ navigation, tasks, addTask }) => {
       <FlatList
         data={tasks}
         renderItem={({ item }) => 
-          <View>
+          <View style={styles.taskButton}>
             <Button title={item.name} onPress={() => handleTaskPress(item)} />
           </View>
         }
@@ -109,11 +110,12 @@ const DetailPage = ({ route, tasks, updateTaskDetails }) => {
 
   return (
     <View style={styles.container}>
-      <Text>{task.name}</Text>
+      <Text style={styles.title}>{task.name}</Text>
       
-      <Text>Task details:</Text>
+      <Text style={styles.label}>Task details:</Text>
 
       <TextInput
+        style={styles.detailsInput}
         placeholder="Write details here"
         value={task.details}
         onChangeText={(txt) => updateTaskDetails(task.key, txt)}
@@ -132,5 +134,25 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     marginBottom: 15,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: 'gray',
+    padding: 10,
+    marginBottom: 10,
+  },
+  detailsInput: {
+    borderWidth: 1,
+    borderColor: 'gray',
+    padding: 10,
+    height: 120,
+    textAlignVertical: 'top'
+  },
+  taskButton: {
+    marginTop: 10,
   }
 })
