@@ -1,3 +1,5 @@
+import { app, database } from './firebase';
+import { collection, addDoc} from 'firebase/firestore';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet, Text, View, TextInput, Button, FlatList  } from 'react-native';
@@ -11,6 +13,8 @@ export default function App() {
     { key: '1', name: 'Task 1', details: 'Details for task 1' },
     { key: '2', name: 'Task 2', details: 'Details for task 2' }
   ]);
+
+  alert(JSON.stringify(database, null, 4))
 
   function addTask(taskName) {
     if (!taskName.trim()) return;
