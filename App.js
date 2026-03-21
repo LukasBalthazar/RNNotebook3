@@ -4,42 +4,57 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet, Text, View, TextInput, Button, FlatList  } from 'react-native';
 import { useState} from 'react';
+import { useCollection } from 'react-firebase-hooks/firestore';
 
 
 const Stack = createNativeStackNavigator()
 
 export default function App() {
-  const [tasks, setTasks] = useState([
-    { key: '1', name: 'Task 1', details: 'Details for task 1' },
-    { key: '2', name: 'Task 2', details: 'Details for task 2' }
-  ]);
+  const [values, loading, error] = useCollection(collection(database, 'tasks'))
+ 
+  const tasks = values?.docs.map((doc) => ({ 
+    id: doc.id,
+    ...doc.data(),
+  })) || [];
 
-  alert(JSON.stringify(database, null, 4))
-
-  function addTask(taskName) {
+  async function addTask(taskName) {
     if (!taskName.trim()) return;
 
-    const newTask = {
-      key: Date.now().toString(),
-      name: taskName,
-      details: ''
-    };
-
-    setTasks([...tasks, newTask]);
+    try {
+      await addDoc(collection(database, 'tasks'), {
+        name: taskName,
+        details: '',
+        createdAt: new Date()
+      });
+    } catch (error){
+      console.error('Error adding task: ', error)
+    }
   }
 
   function updateTaskDetails(taskKey, newDetails) {
-    const updatedTasks = tasks.map((task) =>  
-      task.key === taskKey ? {...task, details: newDetails} : task
-  );
+    console.log('Update not implemented in Firestore yet:', taskKey, newDetails);
+  }
 
-  setTasks(updatedTasks);
-}
+  if(loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading tasks...</Text>
+      </View>
+    );
+  }
+
+  if(error) {
+    return (
+      <View style={styles.container}>
+        <Text>Error loading tasks</Text>
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName='ListPage'>
-        <Stack.Screen name='ListPage'>
+      <Stack.Navigator initialRouteName="ListPage">
+        <Stack.Screen name="ListPage">
           {(props) => (
             <ListPage
               {...props}
@@ -49,7 +64,7 @@ export default function App() {
           )}
         </Stack.Screen>
         
-        <Stack.Screen name='DetailPage'>
+        <Stack.Screen name="DetailPage">
           {(props) => (
               <DetailPage
                 {...props}
@@ -67,7 +82,7 @@ const ListPage = ({ navigation, tasks, addTask }) => {
   const [text, setText] = useState('');
 
   function handleTaskPress(item){
-    navigation.navigate('DetailPage', { taskKey: item.key });
+    navigation.navigate('DetailPage', { taskKey: item.id });
   }
 
   function handleAddTask() {
@@ -90,11 +105,12 @@ const ListPage = ({ navigation, tasks, addTask }) => {
 
       <FlatList
         data={tasks}
-        renderItem={({ item }) => 
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
           <View style={styles.taskButton}>
             <Button title={item.name} onPress={() => handleTaskPress(item)} />
           </View>
-        }
+        )}
       />
     </View>
   );
@@ -102,7 +118,7 @@ const ListPage = ({ navigation, tasks, addTask }) => {
 
 const DetailPage = ({ route, tasks, updateTaskDetails }) => {
   const taskKey = route.params?.taskKey;
-  const task = tasks.find((t) => t.key === taskKey);
+  const task = tasks.find((t) => t.id === taskKey);
   
   if(!task) {
     return (
@@ -122,7 +138,7 @@ const DetailPage = ({ route, tasks, updateTaskDetails }) => {
         style={styles.detailsInput}
         placeholder="Write details here"
         value={task.details}
-        onChangeText={(txt) => updateTaskDetails(task.key, txt)}
+        onChangeText={(txt) => updateTaskDetails(task.id, txt)}
         multiline={true}
       />
     </View>
